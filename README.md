@@ -20,7 +20,6 @@ The root template (`main.bicep`) orchestrates four modules. The NIC depends on t
 azure_bicep_vm_project/
 ├── main.bicep
 ├── README.md
-├── deploy.ps1
 ├── parameters/
 │   ├── dev.bicepparam
 │   ├── qa.bicepparam
@@ -96,7 +95,6 @@ param adminCidr = 'YOUR_PUBLIC_IPV4/32'
 
 Do not leave the example `203.0.113.10/32` value. That address is from a documentation-only range and is not your internet-facing IP. The helper script intentionally stops if that placeholder remains.
 
-The `workloadName` must be 2-8 lowercase letters or digits, for example `webapp`. Bicep supports length decorators but does not provide a `@pattern()` decorator. The supplied `deploy.ps1` script checks the lowercase/digit naming rule before it creates Azure resources. If you deploy by another method, follow the same naming rule yourself.
 
 ## 3. SSH public-key handling (BCP258 fix)
 
@@ -129,46 +127,8 @@ az bicep build --file .\modules\vm.bicep
 
 The first command compiles the root template and its referenced local modules. The other commands are optional individual module checks. Fix all compiler errors before deploying.
 
-## 5. Recommended deployment using the supplied PowerShell script
 
-From the project root:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\deploy.ps1 -Environment dev
-```
-
-The script:
-
-1. Checks Azure CLI, the parameter file, and the SSH public key.
-2. Checks the workload name and SSH source CIDR before making Azure changes.
-3. Loads the SSH public key into `AZURE_BICEP_SSH_PUBLIC_KEY` for the current PowerShell process.
-4. Compiles `main.bicep` (including its local modules).
-5. Creates the resource group if it does not exist.
-6. Runs deployment validation and What-If.
-7. Waits for you to type `YES` before creating/updating the resources.
-8. Displays deployment outputs.
-
-Deploy QA or PROD by changing the environment:
-
-```powershell
-.\deploy.ps1 -Environment qa
-.\deploy.ps1 -Environment prod
-```
-
-To use another public-key file:
-
-```powershell
-.\deploy.ps1 -Environment dev -SshPublicKeyPath "$HOME\.ssh\custom_key.pub"
-```
-
-You can override the resource group name or region if required:
-
-```powershell
-.\deploy.ps1 -Environment dev -ResourceGroupName rg-webapp-dev-lab -Location centralindia
-```
-
-## 6. Manual DEV deployment (without deploy.ps1)
+## 5. Manual DEV deployment (without deploy.ps1)
 
 The `.bicepparam` file contains `using '../main.bicep'`. Therefore, when deploying with this linked parameter file, specify the parameter file with `--parameters` and **do not also specify `--template-file`**.
 
@@ -216,7 +176,7 @@ az deployment group create `
 
 Note that the parameter file is linked to `main.bicep`, so these commands intentionally omit `--template-file`. Microsoft documents that combining `--template-file` with a linked `.bicepparam` file can produce an error. The same pattern applies to QA and PROD: change the resource group, deployment name, and parameter file.
 
-## 7. Verify the deployment
+## 6. Verify the deployment
 
 View the deployment outputs:
 
